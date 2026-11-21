@@ -100,6 +100,14 @@ class Run(db.Model):
 
     @protocol.setter
     def protocol(self, protocol_source: dict):
+        for test in protocol_source.get('tests', {}).values():
+            for field in ('input', 'corr', 'output',
+                          'checker_output', 'error_output'):
+                text = test.get(field) or ''
+                if len(text) > 255:
+                    test[field] = text[:255] + '...\n'
+                    if field in ('input', 'corr', 'output'):
+                        test['big_' + field] = True
         mongo.db.protocol.update({'run_id': self.id}, protocol_source, upsert=True)
 
     @staticmethod
